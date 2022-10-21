@@ -29,9 +29,9 @@ public class TaskDbStore {
     public List<Task> findAll() {
         Session session = sf.openSession();
         List<Task> taskList;
-        taskList = (List<Task>) session.createQuery(
-                        "from Task", Task.class)
-                .list();
+        taskList = (List<Task>) session.createNativeQuery(
+                        "select id, name,description,created,done from tasks", Task.class)
+                .getResultList();
         session.close();
         return taskList;
     }
@@ -41,19 +41,21 @@ public class TaskDbStore {
      *
      * @param task - задание
      */
-    public void add(Task task) {
+    public boolean add(Task task) {
+        boolean rsl = false;
         Session session = sf.openSession();
         try {
             session.beginTransaction();
             task.setCreated(LocalDate.now());
             session.save(task);
             session.getTransaction().commit();
-
+            rsl = true;
         } catch (Exception e) {
             session.getTransaction().rollback();
-            throw new RuntimeException(e);
+            LOG.error("Ошибка добавления в базу данных: ", e);
         }
         session.close();
+        return rsl;
     }
 
     /**
@@ -61,17 +63,20 @@ public class TaskDbStore {
      *
      * @param task - задание
      */
-    public void delete(Task task) {
+    public boolean delete(Task task) {
+        boolean rsl = false;
         Session session = sf.openSession();
         try {
             session.beginTransaction();
             session.delete(task);
             session.getTransaction().commit();
+            rsl = true;
         } catch (Exception e) {
             session.getTransaction().rollback();
             LOG.error("Ошибка удаления из базы данных :", e);
         }
         session.close();
+        return rsl;
     }
 
     /**
@@ -79,17 +84,26 @@ public class TaskDbStore {
      *
      * @param task - задание
      */
-    public void update(Task task) {
+    public boolean update(Task task) {
+        boolean rsl = false;
         Session session = sf.openSession();
         try {
             session.beginTransaction();
-            task.setCreated(LocalDate.now());
-            session.update(task);
+            rsl = session.createQuery("update Task t set t.name = :fname, t.description = :fdescription"
+                            + ", t.done = :fdone where id = :fId")
+                    .setParameter("fname", task.getName())
+                    .setParameter("fdescription", task.getDescription())
+                    .setParameter("fdone", task.isDone())
+                    .setParameter("fId", task.getId())
+                    .executeUpdate() > 0;
             session.getTransaction().commit();
+            rsl = true;
         } catch (Exception e) {
             session.getTransaction().rollback();
+            LOG.error("Ошибка обновления в базе данных: ", e);
         }
         session.close();
+        return rsl;
     }
 
     /**
@@ -136,6 +150,30 @@ public class TaskDbStore {
                 .list();
         session.close();
         return taskList;
+    }
+
+    /**
+     * делает задание выполненным изменяя значение поля done
+     *
+     * @param task - задание
+     * @return true - если обновление прошло успешно
+     */
+    public boolean makeTaskComplete(Task task) {
+        boolean rsl = false;
+        Session session = sf.openSession();
+        try {
+            session.beginTransaction();
+            rsl = session.createQuery("update Task t set t.done = true where id = :fId")
+                    .setParameter("fId", task.getId())
+                    .executeUpdate() > 0;
+            session.getTransaction().commit();
+            rsl = true;
+        } catch (Exception e) {
+            session.getTransaction().rollback();
+            LOG.error("Ошибка при потытке изменить статус задания на выполненное: ", e);
+        }
+        session.close();
+        return rsl;
     }
 
 }

@@ -1,4 +1,4 @@
-package ru.job4j.todo.controllers;
+package ru.job4j.todo.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -19,7 +19,7 @@ public class TaskController {
     }
 
     @GetMapping("/tasks")
-    public String candidates(Model model) {
+    public String allTasks(Model model) {
         model.addAttribute("allTasks", taskService.findAll());
         return "tasks";
     }
@@ -75,9 +75,7 @@ public class TaskController {
 
     @PostMapping("/formCompleted")
     public String formCompleted(@ModelAttribute Task task) {
-        Task taskCompleted = taskService.findById(task.getId());
-        taskCompleted.setDone(true);
-        taskService.update(taskCompleted);
+        taskService.makeTaskComplete(task);
         return "redirect:/tasks";
     }
 }

@@ -19,16 +19,16 @@ public class TaskService {
         return taskDbStore.findAll();
     }
 
-    public void add(Task task) {
-        taskDbStore.add(task);
+    public boolean add(Task task) {
+        return taskDbStore.add(task);
     }
 
-    public void delete(Task task) {
-        taskDbStore.delete(task);
+    public boolean delete(Task task) {
+        return taskDbStore.delete(task);
     }
 
-    public void update(Task task) {
-        taskDbStore.update(task);
+    public boolean update(Task task) {
+        return taskDbStore.update(task);
     }
 
     public Task findById(int id) {
@@ -41,6 +41,10 @@ public class TaskService {
 
     public List<Task> findNotCompletedTasks() {
         return taskDbStore.findNotCompletedTasks();
+    }
+
+    public boolean makeTaskComplete(Task task) {
+        return taskDbStore.makeTaskComplete(task);
     }
 
 
