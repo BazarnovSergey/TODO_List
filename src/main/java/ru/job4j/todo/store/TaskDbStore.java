@@ -29,9 +29,9 @@ public class TaskDbStore {
     public List<Task> findAll() {
         Session session = sf.openSession();
         List<Task> taskList;
-        taskList = (List<Task>) session.createNativeQuery(
-                        "select id, name,description,created,done from tasks", Task.class)
-                .getResultList();
+        taskList = (List<Task>) session.createQuery(
+                        "select t from Task t", Task.class)
+                .list();
         session.close();
         return taskList;
     }
