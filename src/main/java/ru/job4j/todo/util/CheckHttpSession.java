@@ -5,6 +5,9 @@ import ru.job4j.todo.model.User;
 
 public final class CheckHttpSession {
 
+    private CheckHttpSession() {
+    }
+
     public static void checkUserAuthorization(Model model, User user) {
         if (user == null) {
             user = new User();
