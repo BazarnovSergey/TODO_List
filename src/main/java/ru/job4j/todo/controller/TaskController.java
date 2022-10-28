@@ -12,6 +12,9 @@ import ru.job4j.todo.service.TaskService;
 
 import javax.servlet.http.HttpSession;
 
+import java.time.LocalDate;
+import java.util.Optional;
+
 import static ru.job4j.todo.util.CheckHttpSession.checkUserAuthorization;
 
 @Controller
@@ -48,7 +51,8 @@ public class TaskController {
     @GetMapping("/task/{taskId}")
     public String task(Model model, HttpSession httpSession,
                        @PathVariable("taskId") int id) {
-        model.addAttribute("task", taskService.findById(id));
+        Optional<Task> optionalTask = taskService.findById(id);
+        optionalTask.ifPresent(task -> model.addAttribute("task", task));
         User user = (User) httpSession.getAttribute("user");
         checkUserAuthorization(model, user);
         return "task";
@@ -57,7 +61,8 @@ public class TaskController {
     @GetMapping("/formUpdateTask/{taskId}")
     public String formUpdateTask(Model model, HttpSession httpSession,
                                  @PathVariable("taskId") int id) {
-        model.addAttribute("task", taskService.findById(id));
+        Optional<Task> optionalTask = taskService.findById(id);
+        optionalTask.ifPresent(task -> model.addAttribute("task", task));
         User user = (User) httpSession.getAttribute("user");
         checkUserAuthorization(model, user);
         return "updateTask";
@@ -66,6 +71,7 @@ public class TaskController {
     @PostMapping("/updateTask")
     public String updatePost(@ModelAttribute Task task,
                              Model model, HttpSession httpSession) {
+        task.setCreated(LocalDate.now());
         taskService.update(task);
         User user = (User) httpSession.getAttribute("user");
         checkUserAuthorization(model, user);
@@ -89,8 +95,7 @@ public class TaskController {
     }
 
     @PostMapping("/formDelete")
-    public String formDelete(Model model, HttpSession httpSession,
-                             @ModelAttribute Task task) {
+    public String formDelete(@ModelAttribute Task task) {
         taskService.delete(task);
         return "redirect:/tasks";
     }

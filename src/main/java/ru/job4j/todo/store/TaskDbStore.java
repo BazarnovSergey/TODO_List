@@ -2,22 +2,21 @@ package ru.job4j.todo.store;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 import ru.job4j.todo.model.Task;
 
-import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Repository
 @Data
 @AllArgsConstructor
 public class TaskDbStore {
 
-    private final SessionFactory sf;
+    private final CrudRepository crudRepository;
 
     private static final Logger LOG = LoggerFactory.getLogger(TaskDbStore.class.getName());
 
@@ -27,13 +26,7 @@ public class TaskDbStore {
      * @return List с заданиями
      */
     public List<Task> findAll() {
-        Session session = sf.openSession();
-        List<Task> taskList;
-        taskList = (List<Task>) session.createQuery(
-                        "select t from Task t", Task.class)
-                .list();
-        session.close();
-        return taskList;
+        return crudRepository.query("select t from Task t", Task.class);
     }
 
     /**
@@ -41,21 +34,9 @@ public class TaskDbStore {
      *
      * @param task - задание
      */
-    public boolean add(Task task) {
-        boolean rsl = false;
-        Session session = sf.openSession();
-        try {
-            session.beginTransaction();
-            task.setCreated(LocalDate.now());
-            session.save(task);
-            session.getTransaction().commit();
-            rsl = true;
-        } catch (Exception e) {
-            session.getTransaction().rollback();
-            LOG.error("Ошибка добавления в базу данных: ", e);
-        }
-        session.close();
-        return rsl;
+    public Task add(Task task) {
+        crudRepository.run(session -> session.persist(task));
+        return task;
     }
 
     /**
@@ -63,20 +44,11 @@ public class TaskDbStore {
      *
      * @param task - задание
      */
-    public boolean delete(Task task) {
-        boolean rsl = false;
-        Session session = sf.openSession();
-        try {
-            session.beginTransaction();
-            session.delete(task);
-            session.getTransaction().commit();
-            rsl = true;
-        } catch (Exception e) {
-            session.getTransaction().rollback();
-            LOG.error("Ошибка удаления из базы данных :", e);
-        }
-        session.close();
-        return rsl;
+    public void delete(Task task) {
+        crudRepository.run(
+                "delete from Task where id = :fId",
+                Map.of("fId", task.getId())
+        );
     }
 
     /**
@@ -84,26 +56,8 @@ public class TaskDbStore {
      *
      * @param task - задание
      */
-    public boolean update(Task task) {
-        boolean rsl = false;
-        Session session = sf.openSession();
-        try {
-            session.beginTransaction();
-            rsl = session.createQuery("update Task t set t.name = :fname, t.description = :fdescription"
-                            + ", t.done = :fdone where id = :fId")
-                    .setParameter("fname", task.getName())
-                    .setParameter("fdescription", task.getDescription())
-                    .setParameter("fdone", task.isDone())
-                    .setParameter("fId", task.getId())
-                    .executeUpdate() > 0;
-            session.getTransaction().commit();
-            rsl = true;
-        } catch (Exception e) {
-            session.getTransaction().rollback();
-            LOG.error("Ошибка обновления в базе данных: ", e);
-        }
-        session.close();
-        return rsl;
+    public void update(Task task) {
+        crudRepository.run(session -> session.merge(task));
     }
 
     /**
@@ -112,14 +66,11 @@ public class TaskDbStore {
      * @param id - id задания
      * @return возвращает объект Task
      */
-    public Task findById(int id) {
-        Session session = sf.openSession();
-        Task task = session.createQuery(
-                        "from Task where id = :fId ", Task.class)
-                .setParameter("fId", id)
-                .uniqueResult();
-        session.close();
-        return task;
+    public Optional<Task> findById(int id) {
+        return crudRepository.optional(
+                "from Task where id = :fId", Task.class,
+                Map.of("fId", id)
+        );
     }
 
     /**
@@ -128,13 +79,7 @@ public class TaskDbStore {
      * @return List с выполненныи заданиями
      */
     public List<Task> findCompletedTasks() {
-        Session session = sf.openSession();
-        List<Task> taskList;
-        taskList = (List<Task>) session.createQuery(
-                        "from Task where done = true", Task.class)
-                .list();
-        session.close();
-        return taskList;
+        return crudRepository.query("from Task where done = true", Task.class);
     }
 
     /**
@@ -143,37 +88,18 @@ public class TaskDbStore {
      * @return List с невыполненными заданиями
      */
     public List<Task> findNotCompletedTasks() {
-        Session session = sf.openSession();
-        List<Task> taskList;
-        taskList = (List<Task>) session.createQuery(
-                        "from Task where done = false", Task.class)
-                .list();
-        session.close();
-        return taskList;
+        return crudRepository.query("from Task where done = false", Task.class);
     }
 
     /**
      * делает задание выполненным изменяя значение поля done
      *
      * @param task - задание
-     * @return true - если обновление прошло успешно
      */
-    public boolean makeTaskComplete(Task task) {
-        boolean rsl = false;
-        Session session = sf.openSession();
-        try {
-            session.beginTransaction();
-            rsl = session.createQuery("update Task t set t.done = true where id = :fId")
-                    .setParameter("fId", task.getId())
-                    .executeUpdate() > 0;
-            session.getTransaction().commit();
-            rsl = true;
-        } catch (Exception e) {
-            session.getTransaction().rollback();
-            LOG.error("Ошибка при потытке изменить статус задания на выполненное: ", e);
-        }
-        session.close();
-        return rsl;
+    public void makeTaskComplete(Task task) {
+        crudRepository.run(
+                "update Task t set t.done = true where id = :fId",
+                Map.of("fId", task.getId()));
     }
 
 }

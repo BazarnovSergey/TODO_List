@@ -5,6 +5,7 @@ import ru.job4j.todo.model.Task;
 import ru.job4j.todo.store.TaskDbStore;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class TaskService {
@@ -19,19 +20,19 @@ public class TaskService {
         return taskDbStore.findAll();
     }
 
-    public boolean add(Task task) {
+    public Task add(Task task) {
         return taskDbStore.add(task);
     }
 
-    public boolean delete(Task task) {
-        return taskDbStore.delete(task);
+    public void delete(Task task) {
+        taskDbStore.delete(task);
     }
 
-    public boolean update(Task task) {
-        return taskDbStore.update(task);
+    public void update(Task task) {
+        taskDbStore.update(task);
     }
 
-    public Task findById(int id) {
+    public Optional<Task> findById(int id) {
         return taskDbStore.findById(id);
     }
 
@@ -43,8 +44,8 @@ public class TaskService {
         return taskDbStore.findNotCompletedTasks();
     }
 
-    public boolean makeTaskComplete(Task task) {
-        return taskDbStore.makeTaskComplete(task);
+    public void makeTaskComplete(Task task) {
+        taskDbStore.makeTaskComplete(task);
     }
 
 
