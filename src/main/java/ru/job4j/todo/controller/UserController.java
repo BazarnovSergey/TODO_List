@@ -24,11 +24,13 @@ public class UserController {
 
     @PostMapping("/registration")
     public String registration(Model model, @ModelAttribute User user) {
-        Optional<User> regUser = userService.add(user);
-        if (regUser.isEmpty()) {
+        Optional<User> regUser = userService.findByLogin(user.getLogin());
+        if (regUser.isPresent()) {
             model.addAttribute(
                     "message", "Пользователь с такой почтой уже существует");
             return "redirect:/fail";
+        } else {
+            userService.add(user);
         }
         return "redirect:/success";
     }
