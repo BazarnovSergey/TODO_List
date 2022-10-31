@@ -43,7 +43,11 @@ public class TaskController {
     }
 
     @PostMapping("/createTask")
-    public String createTask(@ModelAttribute Task task) {
+    public String createTask(@ModelAttribute Task task, Model model, HttpSession httpSession) {
+        User user = (User) httpSession.getAttribute("user");
+        checkUserAuthorization(model, user);
+        model.addAttribute("user", user);
+        task.setUser(user);
         taskService.add(task);
         return "redirect:/tasks";
     }
