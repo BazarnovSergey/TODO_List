@@ -29,9 +29,8 @@ public class UserController {
             model.addAttribute(
                     "message", "Пользователь с такой почтой уже существует");
             return "redirect:/fail";
-        } else {
-            userService.add(user);
         }
+        userService.add(user);
         return "redirect:/success";
     }
 
