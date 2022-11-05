@@ -27,7 +27,7 @@ public class TaskDbStore {
      * @return List с заданиями
      */
     public List<Task> findAll() {
-        return crudRepository.query("select t from Task t", Task.class);
+        return crudRepository.query("select t from Task t join fetch t.priority", Task.class);
     }
 
     /**
@@ -70,7 +70,7 @@ public class TaskDbStore {
      */
     public Optional<Task> findById(int id) {
         return crudRepository.optional(
-                "from Task where id = :fId", Task.class,
+                "select t from Task t join fetch t.priority where t.id = :fId", Task.class,
                 Map.of("fId", id)
         );
     }
@@ -81,7 +81,8 @@ public class TaskDbStore {
      * @return List с выполненныи заданиями
      */
     public List<Task> findCompletedTasks() {
-        return crudRepository.query("from Task where done = true", Task.class);
+        return crudRepository.query("select t from Task t join fetch t.priority where t.done = :fDone",
+                Task.class, Map.of("fDone", true));
     }
 
     /**
@@ -90,7 +91,8 @@ public class TaskDbStore {
      * @return List с невыполненными заданиями
      */
     public List<Task> findNotCompletedTasks() {
-        return crudRepository.query("from Task where done = false", Task.class);
+        return crudRepository.query("select t from Task t join fetch t.priority where t.done = :fDone",
+                Task.class, Map.of("fDone", false));
     }
 
     /**

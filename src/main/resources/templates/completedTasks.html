@@ -49,6 +49,7 @@
                 <th scope="col">Название задания</th>
                 <th scope="col">Пользователь</th>
                 <th scope="col">Состояние</th>
+                <th scope="col">Приоритет</th>
                 <th scope="col">Дата</th>
             </tr>
             </thead>
@@ -60,6 +61,9 @@
                 <td><span th:text="${task.user.name}"></span>
                 <td><span th:if="${task.done}">Выполнено</span>
                     <span th:if="${!task.done}">Новое</span>
+                </td>
+                <td>
+                    <span th:text="${task.priority.name}"></span>
                 </td>
                 <td><span th:text="${task.getCreated()}"></span>
                 </td>

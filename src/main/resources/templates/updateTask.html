@@ -58,6 +58,12 @@
                         <label for="name">Описание</label>
                         <input type="text" class="form-control" name="description" id="description"
                                th:field="*{description}">
+                        <label for="priority.id">Приоритет</label>
+                        <select class="form-control" id="priority.id" name="priority.id">
+                            <option th:each="priority : ${priorities}" th:value="${priority.id}"
+                                    th:text="${priority.name}"></option>
+                        </select>
+
                     </div>
                     <div class="form-check">
                         <input type="checkbox" name="done" class="form-check-input" id="done">
