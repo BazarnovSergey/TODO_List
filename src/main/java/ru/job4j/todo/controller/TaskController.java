@@ -1,8 +1,10 @@
 package ru.job4j.todo.controller;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import ru.job4j.todo.model.Priority;
 import ru.job4j.todo.model.Task;
 import ru.job4j.todo.model.User;
@@ -51,7 +53,10 @@ public class TaskController {
         checkUserAuthorization(model, user);
         model.addAttribute("user", user);
         Optional<Priority> optionalPriority = priorityService.findById(priorityId);
-        optionalPriority.ifPresent(task::setPriority);
+        if (optionalPriority.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+        task.setPriority(optionalPriority.get());
         task.setUser(user);
         taskService.add(task);
         return "redirect:/tasks";
@@ -61,7 +66,10 @@ public class TaskController {
     public String task(Model model, HttpSession httpSession,
                        @PathVariable("taskId") int id) {
         Optional<Task> optionalTask = taskService.findById(id);
-        optionalTask.ifPresent(task -> model.addAttribute("task", task));
+        if (optionalTask.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+        model.addAttribute("task", optionalTask.get());
         User user = (User) httpSession.getAttribute("user");
         checkUserAuthorization(model, user);
         return "task";
@@ -72,7 +80,10 @@ public class TaskController {
                                  @PathVariable("taskId") int id) {
         model.addAttribute("priorities", priorityService.findAll());
         Optional<Task> optionalTask = taskService.findById(id);
-        optionalTask.ifPresent(task -> model.addAttribute("task", task));
+        if (optionalTask.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+        model.addAttribute("task", optionalTask.get());
         User user = (User) httpSession.getAttribute("user");
         checkUserAuthorization(model, user);
         return "updateTask";
@@ -82,7 +93,9 @@ public class TaskController {
     public String updatePost(@ModelAttribute Task task, @RequestParam("priority.id") Integer priorityId,
                              Model model, HttpSession httpSession) {
         Optional<Priority> optionalPriority = priorityService.findById(priorityId);
-        optionalPriority.ifPresent(task::setPriority);
+        if (optionalPriority.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
         task.setCreated(LocalDate.now());
         User user = (User) httpSession.getAttribute("user");
         checkUserAuthorization(model, user);
@@ -120,5 +133,11 @@ public class TaskController {
         User user = (User) httpSession.getAttribute("user");
         checkUserAuthorization(model, user);
         return "redirect:/tasks";
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public String handleResourceNotFoundException() {
+        return "404";
     }
 }
