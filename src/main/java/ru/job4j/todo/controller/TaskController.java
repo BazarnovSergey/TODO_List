@@ -5,15 +5,19 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import ru.job4j.todo.model.Category;
 import ru.job4j.todo.model.Priority;
 import ru.job4j.todo.model.Task;
 import ru.job4j.todo.model.User;
+import ru.job4j.todo.service.CategoryService;
 import ru.job4j.todo.service.PriorityService;
 import ru.job4j.todo.service.TaskService;
 
 import javax.servlet.http.HttpSession;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import static ru.job4j.todo.util.CheckHttpSession.checkUserAuthorization;
@@ -23,10 +27,12 @@ public class TaskController {
 
     private final TaskService taskService;
     private final PriorityService priorityService;
+    private final CategoryService categoryService;
 
-    public TaskController(TaskService taskService, PriorityService priorityService) {
+    public TaskController(TaskService taskService, PriorityService priorityService, CategoryService categoryService) {
         this.taskService = taskService;
         this.priorityService = priorityService;
+        this.categoryService = categoryService;
     }
 
     @GetMapping("/tasks")
@@ -43,11 +49,13 @@ public class TaskController {
         checkUserAuthorization(model, user);
         model.addAttribute("user", user);
         model.addAttribute("priorities", priorityService.findAll());
+        model.addAttribute("categories", categoryService.findAll());
         return "addTask";
     }
 
     @PostMapping("/createTask")
     public String createTask(@ModelAttribute Task task, @RequestParam("priority.id") Integer priorityId,
+                             @RequestParam("categoriesIDList") List<Integer> categoriesIDList,
                              Model model, HttpSession httpSession) {
         User user = (User) httpSession.getAttribute("user");
         checkUserAuthorization(model, user);
@@ -56,6 +64,15 @@ public class TaskController {
         if (optionalPriority.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
+        List<Category> categoryList = new ArrayList<>();
+        for (Integer categoryID : categoriesIDList) {
+            var optionalCategory = categoryService.findById(categoryID);
+            if (optionalCategory.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+            }
+            categoryList.add(optionalCategory.get());
+        }
+        task.setCategories(categoryList);
         task.setPriority(optionalPriority.get());
         task.setUser(user);
         taskService.add(task);
