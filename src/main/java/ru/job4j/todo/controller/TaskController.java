@@ -16,9 +16,9 @@ import ru.job4j.todo.service.TaskService;
 import javax.servlet.http.HttpSession;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static ru.job4j.todo.util.CheckHttpSession.checkUserAuthorization;
 
@@ -64,14 +64,10 @@ public class TaskController {
         if (optionalPriority.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
-        List<Category> categoryList = new ArrayList<>();
-        for (Integer categoryID : categoriesIDList) {
-            var optionalCategory = categoryService.findById(categoryID);
-            if (optionalCategory.isEmpty()) {
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-            }
-            categoryList.add(optionalCategory.get());
-        }
+        List<Category> categoryList = categoriesIDList.stream()
+                .map(id -> categoryService.findById(id)
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)))
+                .toList();
         task.setCategories(categoryList);
         task.setPriority(optionalPriority.get());
         task.setUser(user);
