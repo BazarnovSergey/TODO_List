@@ -4,7 +4,8 @@ import org.springframework.stereotype.Service;
 import ru.job4j.todo.model.User;
 import ru.job4j.todo.store.UserDBStore;
 
-import java.util.Optional;
+import java.time.ZoneId;
+import java.util.*;
 
 @Service
 public class UserService {
@@ -25,5 +26,9 @@ public class UserService {
 
     public Optional<User> findByLogin(String login) {
         return userDBStore.findByLogin(login);
+    }
+
+    public Set<String> getAvailableZones() {
+        return new HashSet<String>(ZoneId.getAvailableZoneIds());
     }
 }

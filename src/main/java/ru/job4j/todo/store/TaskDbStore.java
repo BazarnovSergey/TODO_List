@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 import ru.job4j.todo.model.Task;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -36,7 +35,6 @@ public class TaskDbStore {
      * @param task - задание
      */
     public Task add(Task task) {
-        task.setCreated(LocalDate.now());
         crudRepository.run(session -> session.merge(task));
         return task;
     }

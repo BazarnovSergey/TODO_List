@@ -11,6 +11,8 @@ import ru.job4j.todo.service.UserService;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Optional;
 
 @Controller
@@ -23,13 +25,16 @@ public class UserController {
     }
 
     @PostMapping("/registration")
-    public String registration(Model model, @ModelAttribute User user) {
+    public String registration(Model model, @ModelAttribute User user,
+                               @RequestParam(name = "zoneId") String zone
+    ) {
         Optional<User> regUser = userService.findByLogin(user.getLogin());
         if (regUser.isPresent()) {
             model.addAttribute(
                     "message", "Пользователь с такой почтой уже существует");
             return "redirect:/fail";
         }
+        user.setUserZone(LocalDateTime.now(ZoneId.of(zone)));
         userService.add(user);
         return "redirect:/success";
     }
@@ -37,6 +42,7 @@ public class UserController {
     @GetMapping("/newUser")
     public String formRegistration(Model model) {
         model.addAttribute("user", new User());
+        model.addAttribute("timeZones", userService.getAvailableZones());
         return "addNewUser";
     }
 

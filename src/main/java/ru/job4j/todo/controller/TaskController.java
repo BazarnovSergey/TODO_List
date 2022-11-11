@@ -15,10 +15,9 @@ import ru.job4j.todo.service.TaskService;
 
 import javax.servlet.http.HttpSession;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static ru.job4j.todo.util.CheckHttpSession.checkUserAuthorization;
 
@@ -71,6 +70,7 @@ public class TaskController {
         task.setCategories(categoryList);
         task.setPriority(optionalPriority.get());
         task.setUser(user);
+        task.setCreated(user.getUserZone());
         taskService.add(task);
         return "redirect:/tasks";
     }
@@ -109,7 +109,7 @@ public class TaskController {
         if (optionalPriority.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
-        task.setCreated(LocalDate.now());
+        task.setCreated(LocalDateTime.now());
         User user = (User) httpSession.getAttribute("user");
         checkUserAuthorization(model, user);
         task.setUser(user);
